@@ -29,7 +29,8 @@ void draw(Ts&&...args) {
 	//first arg list must contain all name tags in the desired positional order
 	//second list must be the args passed by the user
 	auto ta = p2::make_tuple(length, height, depth)(std::forward<Ts>(args)...);
-	auto l = ta[height];	//input parameter indexing is trivial
+	auto h = ta[height];	//input parameter indexing is trivial
+	doSomething(ta[length]);
 }
 
 int main(int argc, const char** argv)
