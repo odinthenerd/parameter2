@@ -11,7 +11,7 @@ struct DepthMaker
 	}
 };
 
-//in order to sue named parameters the user must first define names:
+//in order to use named parameters the user must first define names:
 
 //we can capture default value as a constexpr
 constexpr auto length = p2::make_tag<1>(4);				
