@@ -5,10 +5,13 @@ Distributed under the Boost Software License, Version 1.0.
 =================================================================================================**/
 
 #pragma once
-#include "brigand\algorithms.hpp"
+#define BRIGAND_NO_BOOST_SUPPORT
+#include "brigand\brigand.hpp"
 
 
 namespace parameter2 {
+	template<unsigned N, typename T, typename DefaultValueMaker>
+	struct tag;
 	namespace detail {
 		template<typename T>
 		struct make_default_value {
@@ -22,52 +25,83 @@ namespace parameter2 {
 		///DefaultValueMaker is a functor which returns the default value
 		template<unsigned N, typename T>
 		struct tagged_parameter {
+			using parameter_type = T;
 			T val_;
 		};
 
-		template<int index>
-		struct tuple_getter {
-			template<typename T>
-			auto operator()(T& t) {
-				return std::move(std::get<index>(t).val_);
+		template<typename T>
+		struct make_default;
+		template<unsigned N, typename T, typename DefaultValueMaker>
+		struct make_default<tag<N, T, DefaultValueMaker>> : DefaultValueMaker {};
+
+		template<unsigned N, typename T>
+		struct make_default<tag<N, T, use_constexpr_value>> {
+			T operator()() {  //TODO
+				return{};
+			}
+		};
+
+		template<unsigned N, typename T, T V>
+		struct make_default<tag<N, T, std::integral_constant<T,V>>> {
+			T operator()() {  
+				return V;
 			}
 		};
 
 		template<typename T>
-		struct call_default_factory_functor {
-			template<typename U>
-			auto operator()(U&) {
-				return T{}();
+		struct make_defaults;
+		template<typename...Ts>
+		struct make_defaults<brigand::list<Ts...>>{
+			std::tuple<typename Ts::parameter_type...> operator()() {
+				return std::tuple<typename Ts::parameter_type...>{ make_default<Ts>{}()... };
 			}
 		};
 
-		template<typename Index, typename Maker>
-		struct selector_impl {
-			using type = tuple_getter <Index::value >;
-		};
-		template<typename Maker>
-		struct selector_impl<brigand::no_such_type_, Maker> {
-			using type = call_default_factory_functor<Maker>;
+		template<typename T>
+		struct get_value {
+			using type = typename T::parameter_type;
 		};
 
-		template<typename T, typename TupleContents>
-		using selector = typename selector_impl<brigand::index_of<TupleContents, T>, typename T::maker>::type;
+		template<typename T, typename...Ts>
+		struct results_in_one_of {
+			using type = brigand::any<brigand::list<Ts...>, std::is_same<brigand::_1, typename T::tagged_parameter_type>>;
+		};
 
-		template<typename PL,typename...Ts>
+		template<typename T, typename...Ts>
+		struct not_results_in_one_of {
+			using type = brigand::none<brigand::list<Ts...>, std::is_same<brigand::_1, typename T::tagged_parameter_type>>;
+		};
+
+
+		//PL is a list of taks for which we have parameters
+		//DL is a list of tags from which we need the defaults
+		template<typename PL, typename DL, typename...Ts>
 		struct parameter_tuple {
-			std::tuple<Ts...> t;
+			
+			std::tuple<typename Ts::parameter_type...> parameters;
+			brigand::wrap<brigand::transform<DL,get_value<brigand::_1>>, std::tuple> defaults;
+			//if we have to parameter
 			template<typename T>
-			decltype(std::get<brigand::index_of<brigand::list<Ts...>, typename T::type>::value>(t)) operator[](T) {
-				return std::get<brigand::index_of<brigand::list<Ts...>, typename T::type>::value>(t);
+			decltype(std::get<brigand::index_of<PL, T>::value>(parameters)) operator[](T) {
+				return std::get<brigand::index_of<PL, T>::value>(parameters);
+			}
+			//if we do not have the parameter use default
+			template<typename T>
+			decltype(std::get<brigand::index_of<DL, T>::value>(defaults)) operator[](T) {
+				return std::get<brigand::index_of<DL, T>::value>(defaults);
 			}
 		};
 
-
+		
 		template<typename...Ps>
 		struct tuple_maker {
+			std::tuple<Ps...> defaults;
 			template<typename...Ts>
-			parameter_tuple<brigand::list<Ps...>, Ts...> operator()(Ts...args) {
-				return{ std::tuple<Ts...>{args...} };
+			auto operator()(Ts...args) {
+				using all_tags = brigand::list<Ps...>;
+				using defaults_needed = brigand::remove_if<all_tags, results_in_one_of<brigand::_1, Ts...>>;
+				using tags_with_parameters = brigand::remove_if<all_tags, not_results_in_one_of<brigand::_1, Ts...>>;
+				return parameter_tuple<tags_with_parameters, defaults_needed, Ts...>{ std::tuple<typename Ts::parameter_type...>{args.val_...}, make_defaults<defaults_needed>{}() };
 			}
 		};
 	}
@@ -77,8 +111,9 @@ namespace parameter2 {
 	///DefaultValueMaker is a functor which returns the default value
 	template<unsigned N, typename T, typename DefaultValueMaker = detail::make_default_value<T>>
 	struct tag {
-		using type = detail::tagged_parameter<N, T>;
-		constexpr type operator=(T in) const {
+		using tagged_parameter_type = detail::tagged_parameter<N, T>;
+		using parameter_type = T;
+		constexpr tagged_parameter_type operator=(T in) const {
 			return{ std::move(in) };
 		}
 
@@ -87,8 +122,9 @@ namespace parameter2 {
 	template<unsigned N, typename T>
 	struct tag<N, T, detail::use_constexpr_value> {
 		T default_;
-		using type = detail::tagged_parameter<N, T>;
-		constexpr type operator=(T in) const {
+		using parameter_type = T;
+		using tagged_parameter_type = detail::tagged_parameter<N, T>;
+		constexpr tagged_parameter_type operator=(T in) const {
 			return{ std::move(in) };
 		}
 	};
@@ -100,8 +136,8 @@ namespace parameter2 {
 	}
 
 	template<typename...Ts>
-	detail::tuple_maker<Ts...> make_tuple(Ts...) {
-		return{};
+	detail::tuple_maker<Ts...> make_tuple(const Ts...args) {
+		return{ std::tuple<const Ts...>{args...} };
 	}
 }
 
