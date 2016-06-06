@@ -63,4 +63,4 @@ In our opinion Boost.parameter is slightly too premissive when it comes to conve
  
 ## requirements:
  - c++11 or higher compiler
- - since our goal is speed we use brigand (the only dependancy), however use with any other MPL library which supports index_of would be trivial to support if needed
+ - since our goal is speed we use brigand (the only dependancy), however use with any other MPL library possible to support if needed
