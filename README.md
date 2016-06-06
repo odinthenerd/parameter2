@@ -30,7 +30,9 @@ void draw(Ts&&...args) {
 	//second list must be the args passed by the user
 	auto ta = p2::make_tuple(length, height, depth)(std::forward<Ts>(args)...);
 	auto h = ta[height];	//input parameter indexing is trivial
-	doSomething(ta[length]);
+	auto &l = ta[length];
+	doSomething(l);
+	doSomething(ta[length]); //indexing is resolved at compile time so this is not as inefficient as it looks
 }
 
 int main(int argc, const char** argv)
