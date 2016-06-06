@@ -62,5 +62,5 @@ In our opinion Boost.parameter is slightly too premissive when it comes to conve
  - should we support non constexpr defaults? This is really on critical if we want to default out parameters.
  
 ## requirements:
- - c++11 or higher compiler
+ - c++14 or higher compiler
  - since our goal is speed we use brigand (the only dependancy), however use with any other MPL library possible to support if needed
