@@ -84,6 +84,11 @@ namespace parameter2 {
 		template<typename T>
 		struct is_reference_wrapper<std::reference_wrapper<T>> : std::true_type {};
 
+		template<typename T>
+		struct is_tag : std::false_type {};
+		template<unsigned N, typename T, typename DefaultValueMaker>
+		struct is_tag<tag<N, T, DefaultValueMaker>> : std::true_type {};
+
 		//PL is a list of taks for which we have parameters
 		//DL is a list of tags from which we need the defaults
 		template<typename PL, typename DL, typename...Ts>
@@ -126,6 +131,11 @@ namespace parameter2 {
 				using all_tags = brigand::list<Ps...>;
 				using defaults_needed = brigand::remove_if<all_tags, results_in_one_of<brigand::_1, Ts...>>;
 				using tags_with_parameters = brigand::remove_if<all_tags, not_results_in_one_of<brigand::_1, Ts...>>;
+				constexpr bool allArguementsNamed = brigand::all < tags_with_parameters, is_tag<brigand::_1>>::value;
+				constexpr bool noArguementIsNamed = brigand::none < tags_with_parameters, is_tag<brigand::_1>>::value;
+				constexpr bool allNotProvidedArguementsHaveDefaults = brigand::none < defaults_needed, std::is_same<void,brigand::_1>>::value;
+				static_assert(allNotProvidedArguementsHaveDefaults, "");
+				static_assert(allArguementsNamed, "");
 				return parameter_tuple<tags_with_parameters, defaults_needed, Ts...>{ std::tuple<typename Ts::parameter_type...>{args.val_...}, make_defaults<defaults_needed>{}(defaults) };
 			}
 		};
