@@ -32,18 +32,24 @@ namespace parameter2 {
 		template<typename T>
 		struct make_default;
 		template<unsigned N, typename T, typename DefaultValueMaker>
-		struct make_default<tag<N, T, DefaultValueMaker>> : DefaultValueMaker {};
-
+		struct make_default<tag<N, T, DefaultValueMaker>> {
+			template<typename D>
+			auto operator()(const D& defaults) { 
+				return DefaultValueMaker{}();
+			}
+		};
 		template<unsigned N, typename T>
 		struct make_default<tag<N, T, use_constexpr_value>> {
-			T operator()() {  //TODO
-				return{};
+			template<typename D>
+			T operator()(const D& defaults) { 
+				return std::get<brigand::index_of<brigand::wrap<D,brigand::list>, tag<N, T, use_constexpr_value>>::value>(defaults).default_;
 			}
 		};
 
 		template<unsigned N, typename T, T V>
 		struct make_default<tag<N, T, std::integral_constant<T,V>>> {
-			T operator()() {  
+			template<typename D>
+			T operator()(const D& ) {
 				return V;
 			}
 		};
@@ -52,8 +58,9 @@ namespace parameter2 {
 		struct make_defaults;
 		template<typename...Ts>
 		struct make_defaults<brigand::list<Ts...>>{
-			std::tuple<typename Ts::parameter_type...> operator()() {
-				return std::tuple<typename Ts::parameter_type...>{ make_default<Ts>{}()... };
+			template<typename D>
+			std::tuple<typename Ts::parameter_type...> operator()(const D& defaults) {
+				return std::tuple<typename Ts::parameter_type...>{ make_default<Ts>{}(defaults)... };
 			}
 		};
 
@@ -101,7 +108,7 @@ namespace parameter2 {
 				using all_tags = brigand::list<Ps...>;
 				using defaults_needed = brigand::remove_if<all_tags, results_in_one_of<brigand::_1, Ts...>>;
 				using tags_with_parameters = brigand::remove_if<all_tags, not_results_in_one_of<brigand::_1, Ts...>>;
-				return parameter_tuple<tags_with_parameters, defaults_needed, Ts...>{ std::tuple<typename Ts::parameter_type...>{args.val_...}, make_defaults<defaults_needed>{}() };
+				return parameter_tuple<tags_with_parameters, defaults_needed, Ts...>{ std::tuple<typename Ts::parameter_type...>{args.val_...}, make_defaults<defaults_needed>{}(defaults) };
 			}
 		};
 	}
