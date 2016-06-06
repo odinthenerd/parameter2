@@ -79,22 +79,40 @@ namespace parameter2 {
 			using type = brigand::none<brigand::list<Ts...>, std::is_same<brigand::_1, typename T::tagged_parameter_type>>;
 		};
 
+		template<typename T>
+		struct is_reference_wrapper : std::false_type {};
+		template<typename T>
+		struct is_reference_wrapper<std::reference_wrapper<T>> : std::true_type {};
 
 		//PL is a list of taks for which we have parameters
 		//DL is a list of tags from which we need the defaults
 		template<typename PL, typename DL, typename...Ts>
 		struct parameter_tuple {
-			
-			std::tuple<typename Ts::parameter_type...> parameters;
-			brigand::wrap<brigand::transform<DL,get_value<brigand::_1>>, std::tuple> defaults;
-			//if we have to parameter
+			using parameter_types = brigand::list<typename Ts::parameter_type...>;
+			using default_types = brigand::transform<DL, get_value<brigand::_1>>;
+			brigand::wrap<parameter_types, std::tuple> parameters;
+			brigand::wrap<default_types, std::tuple> defaults;
+			//if we have a parameter
 			template<typename T>
-			decltype(std::get<brigand::index_of<PL, T>::value>(parameters)) operator[](T) {
+			std::enable_if_t<
+				(brigand::contains<brigand::wrap<PL, brigand::set>, T>::value &&
+					(!is_reference_wrapper<typename T::parameter_type>::value)),
+				typename T::parameter_type
+			>& operator[](T) {
 				return std::get<brigand::index_of<PL, T>::value>(parameters);
+			}
+			//if we have a parameter and a the type is a ref wraper
+			template<typename T>
+			std::enable_if_t<
+				(brigand::contains<brigand::wrap<PL, brigand::set>, T>::value &&
+					is_reference_wrapper<typename T::parameter_type>::value),
+				typename T::parameter_type::type
+			>& operator[](T) {
+				return std::get<brigand::index_of<PL, T>::value>(parameters).get();
 			}
 			//if we do not have the parameter use default
 			template<typename T>
-			decltype(std::get<brigand::index_of<DL, T>::value>(defaults)) operator[](T) {
+			std::enable_if_t<brigand::contains<brigand::wrap<DL, brigand::set>,T>::value, typename T::parameter_type>& operator[](T) {
 				return std::get<brigand::index_of<DL, T>::value>(defaults);
 			}
 		};
@@ -143,7 +161,7 @@ namespace parameter2 {
 	}
 
 	template<typename...Ts>
-	detail::tuple_maker<Ts...> make_tuple(const Ts...args) {
+	constexpr detail::tuple_maker<Ts...> make_tuple(const Ts...args) {
 		return{ std::tuple<const Ts...>{args...} };
 	}
 }
