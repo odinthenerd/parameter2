@@ -12,6 +12,8 @@ struct DepthMaker
 };
 
 //in order to use named parameters the user must first define names:
+//(numbers are needed in order to disambiguate between two tags with the same type. numbers need not be in asscending 
+//order or contiguous but must be unique within a call to make_tuple)
 
 //we can capture default value as a constexpr
 constexpr auto length = p2::make_tag<1>(4);				
@@ -58,3 +60,6 @@ In our opinion Boost.parameter is slightly too premissive when it comes to conve
  - should we force users to wrap out parameters with 'std::ref'? (out parameters should be getting more and more unpopular due to compiler improvements and their related coding style improvments. Also chances are that if a user wants the added clairity of named parameters that they also want to visibly state the a parameter is an out parameter.)
  - should we support the capture default values as a constexpr parameter? (the compiler should be able eliminate any unneeded overhead, however in the embedded domain the size of debug builds also matter.)
  
+## requirements:
+ - c++11 or higher compiler
+ - since our goal is speed we use brigand (the only dependancy), however use with any other MPL library which supports index_of would be trivial to support if needed
