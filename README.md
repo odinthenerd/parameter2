@@ -44,8 +44,8 @@ int main(int argc, const char** argv)
 ```
 
 In our opinion Boost.parameter is slightly too premissive when it comes to convertability, parameter2 follows the following strict rules:
- - positional arguements are only accepted if no named arguements are present, all arguements are convertable to their respective postitions and the remaining arguements all have defaults.
- - deduced parameters are only allowed if they are convertable to exactly one candidate
+ - all positional arguements must be alligned left of one or zero named arguements. If a named arguement is provided all arguements to its right must be named or uniquly convertable.
+ - deduced parameters are only allowed if they are convertable to exactly one candidate, they can be mixed with named arguements but only with positional arguements if seperated by a named arguement.
 
 ## goals:
  - at least 10x faster compile time
