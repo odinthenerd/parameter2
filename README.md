@@ -52,6 +52,7 @@ In our opinion Boost.parameter is slightly too premissive when it comes to conve
  - make implementing a function which takes named parameters much easier
  - don't use macros (we hate them)
  - allow return type to be dependant on input types (allows boost.hana style coding)
+ - no `#define BOOST_PARAMETER_MAX_ARITY` and other hackery
 
 ## non goals:
  - no support for named template parameters (implementation is trivial and boost.hana style will make this obsolete in the long run)
