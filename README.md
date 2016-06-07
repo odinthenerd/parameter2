@@ -61,7 +61,7 @@ In our opinion Boost.parameter is slightly too premissive when it comes to conve
 ## open questions:
  - should we force users to wrap out parameters with 'std::ref'? (out parameters should be getting more and more unpopular due to compiler improvements and their related coding style improvments. Also chances are that if a user wants the added clairity of named parameters that they also want to visibly state the a parameter is an out parameter.)
  - should we support the capture default values as a constexpr parameter? (the compiler should be able eliminate any unneeded overhead, however in the embedded domain the size of debug builds also matter.)
- - should we support non constexpr defaults? This is really on critical if we want to default out parameters.
+ - should we support non constexpr defaults? This is really only critical if we want to default out parameters.
  
 ## requirements:
  - c++14 or higher compiler
