@@ -12,8 +12,8 @@ struct DepthMaker
 };
 
 //in order to use named parameters the user must first define names:
-//(numbers are needed in order to disambiguate between two tags with the same type. numbers need not be in asscending 
-//order or contiguous but must be unique within a call to make_tuple)
+//(numbers are needed in order to disambiguate between two tags with the same type. numbers need not be in 
+//asscending order or contiguous but must be unique within a call to make_tuple)
 
 //we can capture default value as a constexpr
 constexpr auto length = p2::make_tag<1>(4);				
@@ -45,7 +45,7 @@ int main(int argc, const char** argv)
 
 In our opinion Boost.parameter is slightly too premissive when it comes to convertability, parameter2 follows the following strict rules:
  - all positional arguements must be alligned left of one or zero named arguements. If a named arguement is provided all arguements to its right must be named or uniquly convertable.
- - deduced parameters are only allowed if they are convertable to exactly one candidate, they can be mixed with named arguements but only with positional arguements if seperated by a named arguement.
+ - deduced parameters are only allowed if they are convertable to exactly one candidate.
 
 ## goals:
  - at least 10x faster compile time
@@ -56,7 +56,6 @@ In our opinion Boost.parameter is slightly too premissive when it comes to conve
 
 ## non goals:
  - no support for named template parameters (implementation is trivial and boost.hana style will make this obsolete in the long run)
- - no support for "predicate requirements" (at least in version 1)
 
 ## open questions:
  - should we force users to wrap out parameters with 'std::ref'? (out parameters should be getting more and more unpopular due to compiler improvements and their related coding style improvments. Also chances are that if a user wants the added clairity of named parameters that they also want to visibly state the a parameter is an out parameter.)
