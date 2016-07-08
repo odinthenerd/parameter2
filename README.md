@@ -2,8 +2,16 @@
 Modern version of boost.parameter enabling named parameters without macros and better compile time. 
 *it should be noted that this lib is in a very early stage and should not be used for anything but fun. Input is however very much appreciated*
 
+In order to use named parameters the user must first define the names names. Names are defined a global constexpr variables which wrap compile time accessable parameters. Each name needs a number in order to disambiguate between two names which would otherwise have the same type. Numbers need not be in asscending order or contiguous but must be unique within a call to `make_tuple`. Names also take an "acceptance policy" in other words a metafunction which returns true or false depending on whether the type provided is adiquate. In the `parameter2` namespace there are handy `is` and `convertable` aliases which create such a metafunction. The third and optional proameters is the default value policy. Default values are used if the users does not provide a parameter. Both compile time knoen and runtime known defaults can be passed. 
+
 ```C++
 namespace p2 = parameter2;
+//we can capture default value as a constexpr and deduce the type. The 'convertable' metafunction will be used
+constexpr auto length = p2::make_tag<1>(4);				
+
+//we can also use "wrapped" default values as long as they are convertable
+constexpr p2::tag<2, p2::convertable<int>, std::integral_constant<int,9>> height{};	
+
 struct DepthMaker
 {
 	int operator()() {
@@ -11,18 +19,17 @@ struct DepthMaker
 	}
 };
 
-//in order to use named parameters the user must first define names:
-//(numbers are needed in order to disambiguate between two tags with the same type. numbers need not be in 
-//asscending order or contiguous but must be unique within a call to make_tuple)
-
-//we can capture default value as a constexpr
-constexpr auto length = p2::make_tag<1>(4);				
-
-//we can also use "wrapped" default values as long as they are convertable
-constexpr p2::tag<2, int, std::integral_constant<int,9>> height{};	
-
 //if all else fails we can specify a functor which makes our default value
-constexpr p2::tag<3, int, DepthMaker> depth{};						
+constexpr p2::tag<3, p2::is<int>, DepthMaker> depth{};		
+
+template<typename T>
+struct is_magic_thing : false_type{};
+template<typename...T>
+struct is_magic_thing<list<magic,Ts...>> : true_type{};
+
+//we could also use our own metafunction to test if the parameter is suitable
+//metafunctions passed must fullfill brigand lambda syntax
+constexpr p2::tag<3, is_magic_thing<brigand::_1>, magic_maker> magic{};	
 
 
 template<typename...Ts>
