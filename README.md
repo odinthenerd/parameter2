@@ -2,15 +2,15 @@
 Modern version of boost.parameter enabling named parameters without macros and better compile time. 
 *it should be noted that this lib is in a very early stage and should not be used for anything but fun. Input is however very much appreciated*
 
-In order to use named parameters the user must first define the names names. Names are defined a global constexpr variables which wrap compile time accessable parameters. Each name needs a number in order to disambiguate between two names which would otherwise have the same type. Numbers need not be in asscending order or contiguous but must be unique within a call to `make_tuple`. Names also take an "acceptance policy" in other words a metafunction which returns true or false depending on whether the type provided is adiquate. In the `parameter2` namespace there are handy `is` and `convertable` aliases which create such a metafunction. The third and optional proameters is the default value policy. Default values are used if the users does not provide a parameter. Both compile time knoen and runtime known defaults can be passed. 
+In order to use named parameters the user must first define the names names. Names are defined a global constexpr variables which wrap compile time accessable parameters. Each name needs a number in order to disambiguate between two names which would otherwise have the same type. Numbers need not be in asscending order or contiguous but must be unique within a call to `make_tuple`. Names also take an "acceptance policy" in other words a metafunction which returns true or false depending on whether the type provided is adiquate. In the `parameter2` namespace there are handy `is` and `convertible` aliases which create such a metafunction. The third and optional proameters is the default value policy. Default values are used if the users does not provide a parameter. Both compile time knoen and runtime known defaults can be passed. 
 
 ```C++
 namespace p2 = parameter2;
-//we can capture default value as a constexpr and deduce the type. The 'convertable' metafunction will be used
+//we can capture default value as a constexpr and deduce the type. The 'convertible' metafunction will be used
 constexpr auto length = p2::make_tag<1>(4);				
 
-//we can also use "wrapped" default values as long as they are convertable
-constexpr p2::tag<2, p2::convertable<int>, std::integral_constant<int,9>> height{};	
+//we can also use "wrapped" default values as long as they are convertible
+constexpr p2::tag<2, p2::convertible<int>, std::integral_constant<int,9>> height{};	
 
 struct DepthMaker
 {
@@ -51,8 +51,8 @@ int main(int argc, const char** argv)
 ```
 
 In our opinion Boost.parameter is slightly too premissive when it comes to convertability, parameter2 follows the following strict rules:
- - all positional arguements must be alligned left of one or zero named arguements. If a named arguement is provided all arguements to its right must be named or uniquly convertable.
- - deduced parameters are only allowed if they are convertable to exactly one candidate.
+ - all positional arguements must be alligned left of one or zero named arguements. If a named arguement is provided all arguements to its right must be named or uniquly convertible.
+ - deduced parameters are only allowed if they are convertible to exactly one candidate.
 
 ## goals:
  - at least 10x faster compile time
